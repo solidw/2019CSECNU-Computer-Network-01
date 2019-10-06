@@ -58,4 +58,4 @@ Ethernet Address : Byte[6]
 2분 동안 Wait, 응답 없으면 캐시 지우기
 2분안에 응답이오면 10분동안 캐시 저장
 
-![1570346289157](C:\Users\solidw\AppData\Roaming\Typora\typora-user-images\1570346289157.png)
+![summary](./image/summary.png)

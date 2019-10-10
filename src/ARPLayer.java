@@ -77,7 +77,7 @@ public class ARPLayer implements BaseLayer {
         pUULayer.SetUnderLayer(this);
     }
 
-    public static class ARPCash {
+    public static class ARPCache {
         private static String interfaceName;
         private static byte[] ipAddress = new byte[4];
         private static byte[] macAddress = new byte[6];

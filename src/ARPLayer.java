@@ -100,19 +100,19 @@ public class ARPLayer implements BaseLayer {
         }
 
         public static void setInterfaceName(String interfaceName) {
-            ARPCash.interfaceName = interfaceName;
+            ARPCache.interfaceName = interfaceName;
         }
 
         public static void setIpAddress(byte[] ipAddress) {
-            ARPCash.ipAddress = ipAddress;
+            ARPCache.ipAddress = ipAddress;
         }
 
         public static void setMacAddress(byte[] macAddress) {
-            ARPCash.macAddress = macAddress;
+            ARPCache.macAddress = macAddress;
         }
 
         public static void setStatus(boolean status) {
-            ARPCash.status = status;
+            ARPCache.status = status;
         }
     }
 }

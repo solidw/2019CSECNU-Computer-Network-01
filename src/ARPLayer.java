@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 public class ARPLayer implements BaseLayer {
 
@@ -92,16 +93,51 @@ public class ARPLayer implements BaseLayer {
         return true;
     }
 
+    public byte[] swapSrcAndDst(byte[] input, byte[] senderIp, byte[] senderMac, byte[] dstIp, byte[] dstMac) {
+        System.arraycopy(dstMac, 0, input, 8, 6);
+        System.arraycopy(dstIp, 0, input, 14, 4);
+        System.arraycopy(senderMac, 0, input,18, 6);
+        System.arraycopy(senderIp, 0, input, 24, 4);
+        return input;
+    }
+
     @Override
-    public boolean Receive(byte[] input) {
-        byte[] ip = new byte[4];
-        byte[] mac = new byte[6];
+    public synchronized boolean Receive(byte[] input) {
+        byte[] opcode = new byte[2];
 
-        System.arraycopy(input, 8, mac, 0, 6);
-        System.arraycopy(input, 14, ip, 0, 4);
+        System.arraycopy(input, 6, opcode, 0, 2);
 
-        ARPCacheTable.getCache(ip).setMacAddress(mac)
-                .setStatus(true);
+        if(opcode[1] == 0x01) {
+            byte[] senderIp = new byte[4];
+            byte[] senderMac = new byte[6];
+            byte[] dstIp = new byte[4];
+
+            System.arraycopy(input, 8, senderMac, 0, 6);
+            System.arraycopy(input, 14, senderIp, 0, 4);
+            System.arraycopy(input, 24, dstIp, 0, 4);
+
+            ARPCacheTable.add(new ARPCache(Integer.toString(ARPCacheTable.table.size()), senderIp, senderMac, true));
+            if(Arrays.equals(dstIp, m_sHeader.srcIp)) {
+                byte[] data = swapSrcAndDst(input, senderIp, senderMac, dstIp, m_sHeader.srcMac);
+                GetUnderLayer().Send(data, data.length);
+            }
+
+            Proxy proxy = ProxyARPEntry.get(dstIp);
+            if(proxy != null) {
+                byte[] data = swapSrcAndDst(input, senderIp, senderMac, proxy.IpAddress(), proxy.MacAddress());
+                GetUnderLayer().Send(data, data.length);
+            }
+        }
+
+        if(opcode[1] == 0x02) {
+            byte[] senderIp = new byte[4];
+            byte[] senderMac = new byte[6];
+            System.arraycopy(input, 8, senderMac, 0, 6);
+            System.arraycopy(input, 14, senderIp, 0, 4);
+
+            Objects.requireNonNull(ARPCacheTable.getCache(senderIp)).setStatus(true)
+                    .setMacAddress(senderMac);
+        }
         return true;
     }
 
@@ -207,6 +243,64 @@ public class ARPLayer implements BaseLayer {
 
         public static void add(ARPCache arpCache) {
             table.add(arpCache);
+        }
+    }
+
+    private class Proxy {
+        private String interfaceName;
+        private byte[] ipAddress = new byte[4];
+        private byte[] macAddress = new byte[6];
+
+        public Proxy(String interfaceName, byte[] ipAddress, byte[] macAddress) {
+            setInterfaceName(interfaceName)
+                    .setIpAddress(ipAddress)
+                    .setMacAddress(macAddress);
+        }
+
+        public String InterfaceName() {
+            return interfaceName;
+        }
+
+        public byte[] IpAddress() {
+            return ipAddress;
+        }
+
+        public byte[] MacAddress() {
+            return macAddress;
+        }
+
+        public Proxy setMacAddress(byte[] macAddress) {
+            this.macAddress = macAddress;
+            return this;
+        }
+
+        public Proxy setIpAddress(byte[] ipAddress) {
+            this.ipAddress = ipAddress;
+            return this;
+        }
+
+        public Proxy setInterfaceName(String interfaceName) {
+            this.interfaceName = interfaceName;
+            return this;
+        }
+    }
+
+    public static class ProxyARPEntry {
+        public static ArrayList<Proxy> entry = new ArrayList<>();
+
+        public static Proxy get(byte[] ip) {
+            for (Proxy item : entry) {
+                if(Arrays.equals(item.IpAddress(), ip))
+                    return item;
+            }
+            return null;
+        }
+
+        public static void remove(byte[] ip) {
+            for (Proxy item : entry) {
+                if(Arrays.equals(item.IpAddress(), ip))
+                    entry.remove(item);
+            }
         }
     }
 }

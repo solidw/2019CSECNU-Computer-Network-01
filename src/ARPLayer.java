@@ -9,6 +9,10 @@ public class ARPLayer implements BaseLayer {
     public BaseLayer p_UnderLayer = null;
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
 
+    public ARPLayer(String name) {
+        pLayerName = name;
+    }
+
     private static class ARPHeader {
         byte[] HWtype = new byte[2];
         byte[] protocol = new byte[2];
@@ -94,6 +98,7 @@ public class ARPLayer implements BaseLayer {
     }
 
     public byte[] swapSrcAndDst(byte[] input, byte[] senderIp, byte[] senderMac, byte[] dstIp, byte[] dstMac) {
+        input[7] = 0x02;
         System.arraycopy(dstMac, 0, input, 8, 6);
         System.arraycopy(dstIp, 0, input, 14, 4);
         System.arraycopy(senderMac, 0, input,18, 6);

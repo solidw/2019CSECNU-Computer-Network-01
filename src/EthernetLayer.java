@@ -73,12 +73,12 @@ public class EthernetLayer implements BaseLayer {
             return false;
         }
 
-        if (input[opcode] == 1){
+        if (opcode == 1){
             input = removeAddressHeader(input, input.length);
             // ARP Layer로 전송
             GetUpperLayer(0).Receive(input);
         }
-        else if (input[opcode] == 2){
+        else if (opcode == 2){
             input = removeAddressHeader(input, input.length);
             // ARP Layer로 전송
             GetUpperLayer(0).Receive(input);

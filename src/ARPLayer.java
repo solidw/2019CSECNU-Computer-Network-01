@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Objects;
 
 public class ARPLayer implements BaseLayer {
 
@@ -26,16 +28,117 @@ public class ARPLayer implements BaseLayer {
             HWLength = 6;
             protLength = 4;
         }
+
+        public void setOpcode(byte[] opcode) {
+            this.opcode = opcode;
+        }
+
+        public void setSrcIp(byte[] srcIp) {
+            this.srcIp = srcIp;
+        }
+
+        public void setDstIp(byte[] dstIp) {
+            this.dstIp = dstIp;
+        }
+
+        public void setSrcMac(byte[] srcMac) {
+            this.srcMac = srcMac;
+        }
+
+        public void setDstMac(byte[] dstMac) {
+            this.dstMac = dstMac;
+        }
+    }
+
+    ARPHeader m_sHeader = new ARPHeader();
+
+    public void setSrcIp(byte[] srcIp) {
+        m_sHeader.setSrcIp(srcIp);
+    }
+
+    public void setDstIp(byte[] dstIp) {
+        m_sHeader.setDstIp(dstIp);
+    }
+
+    public void setSrcMac(byte[] srcMac) {
+        m_sHeader.setSrcMac(srcMac);
+    }
+
+    public void setDstMac(byte[] dstMac) {
+        m_sHeader.setDstMac(dstMac);
+    }
+
+    private byte[] ObjToByte(ARPHeader Header, byte[] input, int length) {
+        byte[] buf = new byte[length + 28];
+        System.arraycopy(Header.HWtype, 0, buf, 0, 2);
+        System.arraycopy(Header.protocol, 0, buf, 2, 2);
+        buf[4] = Header.HWLength;
+        buf[5] = Header.protLength;
+        System.arraycopy(Header.opcode, 0, buf, 6, 2);
+        System.arraycopy(Header.srcMac, 0, buf, 8, 6);
+        System.arraycopy(Header.srcIp, 0, buf, 14, 4);
+        System.arraycopy(Header.dstMac, 0, buf, 18, 6);
+        System.arraycopy(Header.dstIp, 0, buf, 24, 4);
+        System.arraycopy(input, 0, buf, 28, length);
+        return buf;
     }
 
     @Override
     public boolean Send(byte[] input, int length) {
-        return false;
+        m_sHeader.setOpcode(new byte[]{(byte)0x00, (byte)0x01});
+        m_sHeader.setDstMac(new byte[6]);
+        ARPCacheTable.add(new ARPCache(Integer.toString(ARPCacheTable.table.size()), m_sHeader.dstIp, new byte[6], false));
+        byte[] buf = ObjToByte(m_sHeader, input, length);
+        GetUnderLayer().Send(buf, buf.length);
+        return true;
+    }
+
+    public byte[] swapSrcAndDst(byte[] input, byte[] senderIp, byte[] senderMac, byte[] dstIp, byte[] dstMac) {
+        System.arraycopy(dstMac, 0, input, 8, 6);
+        System.arraycopy(dstIp, 0, input, 14, 4);
+        System.arraycopy(senderMac, 0, input,18, 6);
+        System.arraycopy(senderIp, 0, input, 24, 4);
+        return input;
     }
 
     @Override
-    public boolean Receive() {
-        return false;
+    public synchronized boolean Receive(byte[] input) {
+        byte[] opcode = new byte[2];
+
+        System.arraycopy(input, 6, opcode, 0, 2);
+
+        if(opcode[1] == 0x01) {
+            byte[] senderIp = new byte[4];
+            byte[] senderMac = new byte[6];
+            byte[] dstIp = new byte[4];
+
+            System.arraycopy(input, 8, senderMac, 0, 6);
+            System.arraycopy(input, 14, senderIp, 0, 4);
+            System.arraycopy(input, 24, dstIp, 0, 4);
+
+            ARPCacheTable.add(new ARPCache(Integer.toString(ARPCacheTable.table.size()), senderIp, senderMac, true));
+            if(Arrays.equals(dstIp, m_sHeader.srcIp)) {
+                byte[] data = swapSrcAndDst(input, senderIp, senderMac, dstIp, m_sHeader.srcMac);
+                GetUnderLayer().Send(data, data.length);
+            }
+
+            Proxy proxy = ProxyARPEntry.get(dstIp);
+            if(proxy != null) {
+                byte[] data = swapSrcAndDst(input, senderIp, senderMac, proxy.IpAddress(), proxy.MacAddress());
+                GetUnderLayer().Send(data, data.length);
+            }
+        }
+
+        if(opcode[1] == 0x02) {
+            byte[] senderIp = new byte[4];
+            byte[] senderMac = new byte[6];
+            System.arraycopy(input, 8, senderMac, 0, 6);
+            System.arraycopy(input, 14, senderIp, 0, 4);
+
+            Objects.requireNonNull(ARPCacheTable.getCache(senderIp)).setStatus(true)
+                    .setMacAddress(senderMac);
+        }
+        return true;
     }
 
     @Override
@@ -77,42 +180,127 @@ public class ARPLayer implements BaseLayer {
         pUULayer.SetUnderLayer(this);
     }
 
-    public static class ARPCache {
-        private static String interfaceName;
-        private static byte[] ipAddress = new byte[4];
-        private static byte[] macAddress = new byte[6];
-        private static boolean status;
+    private class ARPCache {
+        private String interfaceName;
+        private byte[] ipAddress = new byte[4];
+        private byte[] macAddress = new byte[6];
+        private boolean status;
 
-        public static String InterfaceName() {
+        public ARPCache(String interfaceName, byte[] ipAddress, byte[] macAddress, boolean status) {
+            setInterfaceName(interfaceName)
+                    .setIpAddress(ipAddress)
+                    .setMacAddress(macAddress)
+                    .setStatus(status);
+        }
+
+        public String InterfaceName() {
             return interfaceName;
         }
 
-        public static byte[] IpAddress() {
+        public byte[] IpAddress() {
             return ipAddress;
         }
 
-        public static byte[] MacAddress() {
+        public byte[] MacAddress() {
             return macAddress;
         }
 
-        public static boolean Status() {
+        public boolean Status() {
             return status;
         }
 
-        public static void setInterfaceName(String interfaceName) {
-            ARPCache.interfaceName = interfaceName;
+        public ARPCache setStatus(boolean status) {
+            this.status = status;
+            return this;
         }
 
-        public static void setIpAddress(byte[] ipAddress) {
-            ARPCache.ipAddress = ipAddress;
+        public ARPCache setMacAddress(byte[] macAddress) {
+            this.macAddress = macAddress;
+            return this;
         }
 
-        public static void setMacAddress(byte[] macAddress) {
-            ARPCache.macAddress = macAddress;
+        public ARPCache setIpAddress(byte[] ipAddress) {
+            this.ipAddress = ipAddress;
+            return this;
         }
 
-        public static void setStatus(boolean status) {
-            ARPCache.status = status;
+        public ARPCache setInterfaceName(String interfaceName) {
+            this.interfaceName = interfaceName;
+            return this;
+        }
+    }
+
+    public static class ARPCacheTable {
+        public static ArrayList<ARPCache> table = new ArrayList<>();
+
+        public static ARPCache getCache(byte[] ip) {
+            for (ARPCache item : table) {
+                if(Arrays.equals(item.IpAddress(), ip))
+                    return item;
+            }
+            return null;
+        }
+
+        public static void add(ARPCache arpCache) {
+            table.add(arpCache);
+        }
+    }
+
+    private class Proxy {
+        private String interfaceName;
+        private byte[] ipAddress = new byte[4];
+        private byte[] macAddress = new byte[6];
+
+        public Proxy(String interfaceName, byte[] ipAddress, byte[] macAddress) {
+            setInterfaceName(interfaceName)
+                    .setIpAddress(ipAddress)
+                    .setMacAddress(macAddress);
+        }
+
+        public String InterfaceName() {
+            return interfaceName;
+        }
+
+        public byte[] IpAddress() {
+            return ipAddress;
+        }
+
+        public byte[] MacAddress() {
+            return macAddress;
+        }
+
+        public Proxy setMacAddress(byte[] macAddress) {
+            this.macAddress = macAddress;
+            return this;
+        }
+
+        public Proxy setIpAddress(byte[] ipAddress) {
+            this.ipAddress = ipAddress;
+            return this;
+        }
+
+        public Proxy setInterfaceName(String interfaceName) {
+            this.interfaceName = interfaceName;
+            return this;
+        }
+    }
+
+    public static class ProxyARPEntry {
+        public static ArrayList<Proxy> entry = new ArrayList<>();
+
+        public static Proxy get(byte[] ip) {
+            for (Proxy item : entry) {
+                if(Arrays.equals(item.IpAddress(), ip))
+                    return item;
+            }
+            return null;
+        }
+
+        public static void remove(byte[] ip) {
+            for (Proxy item : entry) {
+                if(Arrays.equals(item.IpAddress(), ip))
+                    entry.remove(item);
+            }
         }
     }
 }

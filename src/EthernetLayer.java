@@ -67,29 +67,27 @@ public class EthernetLayer implements BaseLayer {
 
     public synchronized boolean Receive(byte[] input) {
 
-        int opcode = byte2ToInt(input[14 + 6], input[14 + 7]);
+        int opcode    = byte2ToInt(input[14 + 6], input[14 + 7]);
+        int frameType = byte2ToInt(input[12]    , input[13]);
 
         if ((isRightPacket(input) == false) || isRightAddress(input) == false) {
             return false;
         }
 
-        if (opcode == 1){
+        if (frameType == 0x0806){
             input = removeAddressHeader(input, input.length);
             // ARP Layer로 전송
             GetUpperLayer(0).Receive(input);
+            return true;
         }
-        else if (opcode == 2){
+        else if (frameType == 0x0800){
             input = removeAddressHeader(input, input.length);
-            // ARP Layer로 전송
-            GetUpperLayer(0).Receive(input);
-        }
-        else {
-            input = removeAddressHeader(input, input.length);
-            // 일반적인 프레임의 경우 IP Layer로 전송
+            // IP 프로토콜의 프레임의 경우 IP Layer로 전송
             GetUpperLayer(1).Receive(input);
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     public boolean Send(byte[] input, int length) {
@@ -99,16 +97,25 @@ public class EthernetLayer implements BaseLayer {
         byte[] temp = null;
 
         if (opcode == 1) {
-            // opcode가 1인 경우 ARP 브로드캐스팅이므로, 목적지 주소를 전부 -1로 셋팅
+            // opcode가 1인 경우 ARP 요청 => 브로드캐스팅이므로, 목적지 주소를 전부 -1로 셋팅
             temp = addressing(input, input.length,
                     m_Ethernet_Header.srcAddr.addr,
-                    new byte[]{ -1, -1, -1, -1, -1, -1 });
+                    new byte[]{ -1, -1, -1, -1, -1, -1 },
+                    new byte[]{ 0x08, 0x06 });
         }
-        else {
-            // opcode가 2인 경우이거나 그 이외의 경우 ARP 헤더의 셋팅된 주소를 가져온다.
+        else (opcode == 2) {
+            // opcode가 2인 경우 => ARP 응답에 해당
             temp = addressing(input, input.length,
                     new byte[]{ input[ 8], input[ 9], input[10], input[11], input[12], input[13] },
-                    new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] });
+                    new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] }
+                    new byte[]{ 0x08, 0x06 });
+        }
+        else {
+            // 그 이외의 경우 프로토콜 타입을 IP로 바꿔 IP 레이어로 바로 올라가게 한다
+            temp = addressing(input, input.length,
+                    new byte[]{ input[ 8], input[ 9], input[10], input[11], input[12], input[13] },
+                    new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] }
+                    new byte[]{ 0x08, 0x00 });
         }
 
         if (p_UnderLayer.Send(temp, length + 14) == false) {
@@ -129,7 +136,7 @@ public class EthernetLayer implements BaseLayer {
         return temp;
     }
 
-    private byte[] addressing(byte[] input, int length, byte[] src_address, byte[] dst_address) {
+    private byte[] addressing(byte[] input, int length, byte[] src_address, byte[] dst_address, byte[] protocol) {
 
         byte[] buf = new byte[length + 14];
 
@@ -147,8 +154,8 @@ public class EthernetLayer implements BaseLayer {
         buf[10] = src_address[4];
         buf[11] = src_address[5];
 
-        buf[12] = 0x08;
-        buf[13] = 0x06;
+        buf[12] =    protocol[0];
+        buf[13] =    protocol[1];
 
         for (int i = 0; i < length; i++)
             buf[14 + i] = input[i];
@@ -204,10 +211,11 @@ public class EthernetLayer implements BaseLayer {
     }
 
     private boolean isRightPacket(byte[] input) {
-        int protocol = byte2ToInt(input[14 + 2], input[14 + 3]);
-        int HWtype   = byte2ToInt(input[14 + 0], input[14 + 1]);
+        int protType  = byte2ToInt(input[14 + 2], input[14 + 3]);
+        int HWType    = byte2ToInt(input[14 + 0], input[14 + 1]);
+        int frameType = byte2ToInt(input[12]    , input[13]);
 
-        if (protocol != 0x0800 || HWtype != 0x0001) {
+        if (protType != 0x0800 ||  HWType != 0x0001 || (frameType != 0x0800 && frameType != 0x0806)) {
             return false;
         }
         return true;

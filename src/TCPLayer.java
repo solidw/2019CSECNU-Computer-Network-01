@@ -1,3 +1,5 @@
+package arp;
+
 import java.util.ArrayList;
 
 public class TCPLayer implements BaseLayer {
@@ -98,7 +100,7 @@ public class TCPLayer implements BaseLayer {
 
 
     @Override
-    public boolean Send(byte[] input, int length) {
+    public synchronized boolean Send(byte[] input, int length) {
 
         byte[] buffer = ObjToByte(input, input.length);
         boolean result = this.GetUnderLayer().Send(buffer, buffer.length);
@@ -106,7 +108,7 @@ public class TCPLayer implements BaseLayer {
     }
 
     @Override
-    public boolean Receive(byte[] input) {
+    public synchronized boolean Receive(byte[] input) {
         this.GetUpperLayer(0).Receive(removeHeader(input));
         return false;
     }

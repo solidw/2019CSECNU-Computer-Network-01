@@ -1,3 +1,5 @@
+package arp;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -8,9 +10,13 @@ public class ARPLayer implements BaseLayer {
     public String pLayerName = null;
     public BaseLayer p_UnderLayer = null;
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
+    String interfaceName;
+    AppLayer appLayer;
+
 
     public ARPLayer(String name) {
         pLayerName = name;
+        interfaceName = "Interface 0";
     }
 
     private static class ARPHeader {
@@ -87,11 +93,21 @@ public class ARPLayer implements BaseLayer {
         return buf;
     }
 
+    public void setAppLayer(){
+        appLayer = (AppLayer) GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0);
+    }
+
     @Override
-    public boolean Send(byte[] input, int length) {
+    public synchronized boolean Send(byte[] input, int length) {
         m_sHeader.setOpcode(new byte[]{(byte)0x00, (byte)0x01});
         m_sHeader.setDstMac(new byte[6]);
-        ARPCacheTable.add(new ARPCache(Integer.toString(ARPCacheTable.table.size()), m_sHeader.dstIp, new byte[6], false));
+
+
+        ARPCache addCache = new ARPCache(interfaceName, m_sHeader.dstIp, new byte[6], false);
+        if(ARPCacheTable.add(addCache)){
+            appLayer.addArpCacheToTable(addCache);
+        }
+
         byte[] buf = ObjToByte(m_sHeader, input, length);
         GetUnderLayer().Send(buf, buf.length);
         return true;
@@ -121,7 +137,11 @@ public class ARPLayer implements BaseLayer {
             System.arraycopy(input, 14, senderIp, 0, 4);
             System.arraycopy(input, 24, dstIp, 0, 4);
 
-            ARPCacheTable.add(new ARPCache(Integer.toString(ARPCacheTable.table.size()), senderIp, senderMac, true));
+            ARPCache addCache = new ARPCache(interfaceName, senderIp, senderMac, true);
+            if(ARPCacheTable.add(addCache)){
+                appLayer.addArpCacheToTable(addCache);
+            };
+
             if(Arrays.equals(dstIp, m_sHeader.srcIp)) {
                 byte[] data = swapSrcAndDst(input, senderIp, senderMac, dstIp, m_sHeader.srcMac);
                 GetUnderLayer().Send(data, data.length);
@@ -185,7 +205,7 @@ public class ARPLayer implements BaseLayer {
         pUULayer.SetUnderLayer(this);
     }
 
-    private class ARPCache {
+    public class ARPCache {
         private String interfaceName;
         private byte[] ipAddress = new byte[4];
         private byte[] macAddress = new byte[6];
@@ -233,10 +253,32 @@ public class ARPLayer implements BaseLayer {
             this.interfaceName = interfaceName;
             return this;
         }
+
+        public String getInterfaceName() {
+            return interfaceName;
+        }
+
+        public byte[] getIpAddress() {
+            return ipAddress;
+        }
+
+        public byte[] getMacAddress() {
+            return macAddress;
+        }
+
+        public boolean isStatus() {
+            return status;
+        }
     }
 
     public static class ARPCacheTable {
         public static ArrayList<ARPCache> table = new ArrayList<>();
+        AppLayer appLayer;
+        static byte[] emptyMac = {0, 0, 0, 0, 0, 0};
+
+        public AppLayer getAppLayer() {
+            return appLayer;
+        }
 
         public static ARPCache getCache(byte[] ip) {
             for (ARPCache item : table) {
@@ -246,8 +288,26 @@ public class ARPLayer implements BaseLayer {
             return null;
         }
 
-        public static void add(ARPCache arpCache) {
-            table.add(arpCache);
+        public static ArrayList<ARPCache> getTable() {
+            return table;
+        }
+
+        // table에 arpCache를 추가한다.
+        public static boolean add(ARPCache arpCache) {
+
+            ARPCache getCache = getCache(arpCache.IpAddress());
+
+            // 테이블에 없다면 바로 추가한다.
+            if(getCache == null){
+                table.add(arpCache);
+            // 있지만 mac이 비어있다면 수정한다.
+            }else if(!Arrays.equals(arpCache.getMacAddress(), emptyMac)){
+                getCache.setIpAddress(arpCache.IpAddress());
+            }else{
+                return false;
+            }
+
+            return true;
         }
     }
 

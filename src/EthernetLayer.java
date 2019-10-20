@@ -1,3 +1,5 @@
+package arp;
+
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -48,6 +50,10 @@ public class EthernetLayer implements BaseLayer {
             this.srcAddr = new EthernetAddr();
             this.type	 = new byte[2];
         }
+
+        public void setSrcAddr(byte[] srcAddr) {
+            System.arraycopy(srcAddr, 0, this.srcAddr.addr , 0, 6);
+        }
     }
 
     public int nUpperLayerCount = 0;
@@ -62,7 +68,11 @@ public class EthernetLayer implements BaseLayer {
 
     public EthernetLayer(String name) {
         pLayerName = name;
-        parsingSrcMACAddress(getMacAddr());
+        //parsingSrcMACAddress(getMacAddr());
+    }
+
+    public void setSrcAddr(byte[] addr){
+        this.m_Ethernet_Header.setSrcAddr(addr);
     }
 
     public synchronized boolean Receive(byte[] input) {
@@ -211,9 +221,9 @@ public class EthernetLayer implements BaseLayer {
     }
 
     private boolean isRightPacket(byte[] input) {
-        int protType  = byte2ToInt(input[14 + 2], input[14 + 3]);
-        int HWType    = byte2ToInt(input[14 + 0], input[14 + 1]);
-        int frameType = byte2ToInt(input[12]    , input[13]);
+        int  protType  = byte2ToInt(input[14 + 2], input[14 + 3]);
+        byte HWType    = input[14 + 1];
+        int  frameType = byte2ToInt(input[12]    , input[13]);
 
         if (protType != 0x0800 ||  HWType != 0x0001 || (frameType != 0x0800 && frameType != 0x0806)) {
             return false;
@@ -225,22 +235,27 @@ public class EthernetLayer implements BaseLayer {
 
         int ffCount = 0;
         int fitCount = 0;
+        int loopbackCnt = 0;
+
+        for (int i = 0; i < 6; i++){
+            if(input[i + 6] == m_Ethernet_Header.srcAddr.addr[i]){
+                loopbackCnt++;
+            }
+        }
+
+        if(loopbackCnt == 6) return false;
 
         for (int i = 0; i < 6; i++) {
 
-            // 오른쪽 조건은 루프백을 드롭하기 위한 검사
-            if (input[i] == -1 && (input[i + 6] != m_Ethernet_Header.srcAddr.addr[i])) {
-                ffCount++;
-            }
+            if (input[i] == -1) ffCount++;
 
-            if (input[i] == m_Ethernet_Header.srcAddr.addr[i]) {
-                fitCount++;
-            }
+            if (input[i] == m_Ethernet_Header.srcAddr.addr[i]) fitCount++;
+
         }
 
-        if (ffCount == 6 || fitCount == 6) {
+        if (ffCount == 6 || fitCount == 6)
             return true;
-        }
+
         return false;
     }
 

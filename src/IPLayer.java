@@ -1,3 +1,5 @@
+package arp;
+
 import java.util.ArrayList;
 
 public class IPLayer implements BaseLayer {
@@ -22,6 +24,13 @@ public class IPLayer implements BaseLayer {
         byte[] srcIP;
         byte[] destIP;
 
+        public void setSrcIP(byte[] srcIP) {
+            this.srcIP = srcIP;
+        }
+
+        public void setDestIP(byte[] destIP) {
+            this.destIP = destIP;
+        }
 
         public _IP_HEADER() {
             totalLength = new byte[2];
@@ -33,15 +42,24 @@ public class IPLayer implements BaseLayer {
         }
     }
 
+    public void setSrcIP(byte[] srcIP) {
+        this.m_iHeader.setSrcIP(srcIP);
+    }
+
+    public void setDestIP(byte[] destIP) {
+        this.m_iHeader.setDestIP(destIP);
+    }
+
+
+
     public IPLayer(String pName){
         pLayerName = pName;
         ResetHeader();
-
     }
 
     public void ResetHeader() {
         this.m_iHeader.versionAndHLength = (0x04 << 4);
-        this.m_iHeader.versionAndHLength = (byte) HeaderSize;
+        this.m_iHeader.versionAndHLength += (byte) HeaderSize;
     }
 
 
@@ -71,7 +89,6 @@ public class IPLayer implements BaseLayer {
 
 
         System.arraycopy(this.m_iHeader.destIP, 0, buffer, beforeHeaderSize, this.m_iHeader.destIP.length);
-        beforeHeaderSize += this.m_iHeader.destIP.length;
 
     }
 
@@ -109,15 +126,14 @@ public class IPLayer implements BaseLayer {
 
 
     @Override
-    public boolean Send(byte[] input, int length) {
+    public synchronized boolean Send(byte[] input, int length) {
 
         byte[] buffer = ObjToByte(input, input.length);
-        boolean result = this.GetUnderLayer().Send(buffer, buffer.length);
-        return result;
+        return this.GetUnderLayer().Send(buffer, buffer.length);
     }
 
     @Override
-    public boolean Receive(byte[] input) {
+    public synchronized boolean Receive(byte[] input) {
         this.GetUpperLayer(0).Receive(removeHeader(input));
         return false;
     }

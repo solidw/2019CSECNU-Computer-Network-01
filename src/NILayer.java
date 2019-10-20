@@ -1,11 +1,14 @@
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+package arp;
 
 import org.jnetpcap.Pcap;
 import org.jnetpcap.PcapIf;
 import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 public class NILayer implements BaseLayer {
 
@@ -43,6 +46,16 @@ public class NILayer implements BaseLayer {
         m_iNumAdapter = iNum;
         PacketStartDriver();
         Receive();
+    }
+
+    public byte[] getMacAddress(){
+        byte[] result = null;
+        try {
+            result = m_pAdapterList.get(0).getHardwareAddress();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     public void PacketStartDriver() {

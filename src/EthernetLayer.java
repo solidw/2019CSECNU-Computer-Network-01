@@ -77,7 +77,7 @@ public class EthernetLayer implements BaseLayer {
 
     public synchronized boolean Receive(byte[] input) {
 
-        //  int opcode    = byte2ToInt(input[14 + 6], inddput[14 + 7]);
+        int opcode    = byte2ToInt(input[14 + 6], input[14 + 7]);
         int frameType = byte2ToInt(input[12]    , input[13]);
 
         if ((isRightPacket(input) == false) || isRightAddress(input) == false) {

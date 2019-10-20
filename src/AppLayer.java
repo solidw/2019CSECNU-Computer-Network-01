@@ -21,6 +21,7 @@ import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.JLabel;
@@ -102,13 +103,14 @@ public class AppLayer extends JFrame implements BaseLayer{
 					NetworkInterface net = NetworkInterface.getByInetAddress(presentAddr);
 
 					byte[] macAddressBytes = net.getHardwareAddress();
-					arpLayer.setSrcMac(macAddressBytes);
+					arpLayer.setSrcMac(niLayer.getMacAddress());
+					ethernetLayer.setSrcAddr(niLayer.getMacAddress());
 
 					ethernetLayer.SetUpperLayer(ipLayer);
 
 					// 어떤 어댑터를 사용할지 결정한다.
 					// 디버깅을 통해 adapter list 를 이용하여 설정한다.
-					niLayer.SetAdapterNumber(3);
+					niLayer.SetAdapterNumber(0);
 
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -135,11 +137,13 @@ public class AppLayer extends JFrame implements BaseLayer{
 	// 테이블에 arp를 추가한다.
 	private void addArpToTable(ARPLayer.ARPCache arpCache){
 		String ipAddress = ipByteToString(arpCache.getIpAddress());
-		String macAddress = macToString(arpCache.getMacAddress());
+		String macAddress = arpCache.Status() ? macToString(arpCache.getMacAddress()) : "????";
+		String status = arpCache.Status() ? "Complete" : "Incomplete";
 		arpCacheTableModel.addRow(new String[]{
 				arpCache.getInterfaceName(),
 				ipAddress,
-				macAddress});
+				macAddress,
+				status});
 	}
 
 
@@ -148,13 +152,15 @@ public class AppLayer extends JFrame implements BaseLayer{
 	public synchronized void addArpCacheToTable(ARPLayer.ARPCache arpCache){
 
 		int rowCount = arpCacheTableModel.getRowCount();
-		String storedIp, macAddress;
+		String storedIp, macAddress, status;
 		String addIp = ipByteToString(arpCache.getIpAddress());
 		for (int i = 0; i < rowCount; i++) {
 			storedIp = (String)arpCacheTableModel.getValueAt(i, 1);
 			if(storedIp.equals(addIp)){
-				macAddress = macToString(arpCache.getMacAddress());
+				macAddress = arpCache.Status() ? macToString(arpCache.getMacAddress()) : "????";
+				status = arpCache.Status() ? "Complete" : "Incomplete";
 				arpCacheTableModel.setValueAt(macAddress, i, 2);
+				arpCacheTableModel.setValueAt(status, i, 3);
 				return;
 			}
 		}
@@ -175,7 +181,7 @@ public class AppLayer extends JFrame implements BaseLayer{
 				buf.append('0');
 			}
 
-			buf.append(Integer.toHexString((b < 0) ? b + 255 : b).toUpperCase());
+			buf.append(Integer.toHexString((b < 0) ? b + 256 : b).toUpperCase());
 		}
 		return buf.toString();
 	}
@@ -188,6 +194,28 @@ public class AppLayer extends JFrame implements BaseLayer{
 		}
 		return result;
 	}
+
+	private byte[] parsingSrcMACAddress(String addr) {
+
+		byte[] ret = new byte[6];
+
+		StringTokenizer tokens = new StringTokenizer(addr, "-");
+
+		for (int i = 0; tokens.hasMoreElements(); i++) {
+
+			String temp = tokens.nextToken();
+
+			try {
+				ret[i] = Byte.parseByte(temp, 16);
+			} catch (NumberFormatException e) {
+				int minus = (Integer.parseInt(temp, 16)) - 256;
+				ret[i] = (byte) (minus);
+			}
+		}
+
+		return ret;
+	}
+
 
 	/**
 	 * Create the frame.
@@ -439,19 +467,18 @@ public class AppLayer extends JFrame implements BaseLayer{
 					String temp[] = { (String) comboBoxDevice.getSelectedItem(), ipAddressDlgTF.getText(),
 							ethernetAddressDlgTF.getText() };
 
-					String[] ipAddress = temp[1].split(".");
-					/*
-					if (ipAddress.length != 4) {
-						errorDialog errorLog = new errorDialog("올바른 주소값이 아닙니다.");
-						errorLog.setVisible(true);						
-					} else if( ){
-						
-					} else {
-						
+					proxyArpTableModel.addRow(temp);
+
+					try {
+						InetAddress srcIp = InetAddress.getByName(temp[1].trim());
+						byte[] bytesIp = srcIp.getAddress();
+
+						ARPLayer.Proxy proxy = arpLayer.getProxy(temp[0], bytesIp, parsingSrcMACAddress(temp[2]));
+						ARPLayer.ProxyARPEntry.entry.add(proxy);
+					} catch (UnknownHostException e1) {
+						e1.printStackTrace();
 					}
-						proxyArpTableModel.addRow(temp);
-						dispose();
-					}*/
+					dispose();
 				}
 			});
 			btnOk.setBounds(41, 140, 97, 23);

@@ -33,7 +33,7 @@ public class ARPLayer implements BaseLayer {
         public ARPHeader() {
             HWtype[1] = (byte)0x01;
 
-            protocol[0] = (byte) 0x80;
+            protocol[0] = (byte) 0x08;
 
             HWLength = 6;
             protLength = 4;
@@ -157,11 +157,17 @@ public class ARPLayer implements BaseLayer {
         if(opcode[1] == 0x02) {
             byte[] senderIp = new byte[4];
             byte[] senderMac = new byte[6];
+
+            System.arraycopy(input, 8, senderMac, 0, 6);
+            System.arraycopy(input, 14, senderIp, 0, 4);
+
+            ARPCache addCache = new ARPCache(interfaceName, senderIp, senderMac, true);
             System.arraycopy(input, 8, senderMac, 0, 6);
             System.arraycopy(input, 14, senderIp, 0, 4);
 
             Objects.requireNonNull(ARPCacheTable.getCache(senderIp)).setStatus(true)
                     .setMacAddress(senderMac);
+            appLayer.addArpCacheToTable(addCache);
         }
         return true;
     }
@@ -311,7 +317,11 @@ public class ARPLayer implements BaseLayer {
         }
     }
 
-    private class Proxy {
+    public Proxy getProxy(String name, byte[] ip, byte[] mac){
+        return new Proxy(name, ip, mac);
+    }
+
+    public class Proxy {
         private String interfaceName;
         private byte[] ipAddress = new byte[4];
         private byte[] macAddress = new byte[6];

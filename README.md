@@ -1,6 +1,6 @@
 # Computer-Network-Term-Project
 
-##### ARP cash
+##### ARP cache
 
 ```
 Interface : String

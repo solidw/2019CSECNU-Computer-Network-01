@@ -164,6 +164,7 @@ public class ARPLayer implements BaseLayer {
             if(Arrays.equals(senderIp, m_sHeader.srcIp)) {
                 AppLayer.errorDialog errorDialog = appLayer.getErrorDialog("Duplicated IP");
                 errorDialog.setVisible(true);
+                return false;
             }
 
             ARPCache addCache = new ARPCache(interfaceName, senderIp, senderMac, true);

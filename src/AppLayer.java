@@ -96,8 +96,10 @@ public class AppLayer extends JFrame implements BaseLayer{
 					niLayer = new NILayer("NI");
 					m_LayerMgr.AddLayer(niLayer);
 
-					m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( *Arp ( *Ip ( *Tcp ) ( *GUI ) ) ) ) ");
-
+					m_LayerMgr.ConnectLayers(" NI ( *Ethernet ( +Ip ( *Tcp ( *GUI ) ) ) ) ");
+					m_LayerMgr.GetLayer("Ip").SetUnderLayer(m_LayerMgr.GetLayer("Arp"));
+               				m_LayerMgr.GetLayer("Ethernet").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp"));
+					
 					arpLayer.setAppLayer();
 					ipLayer.setSrcIP(InetAddress.getLocalHost().getAddress());
 					arpLayer.setSrcIp(InetAddress.getLocalHost().getAddress());

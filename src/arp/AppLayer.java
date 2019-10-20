@@ -1,4 +1,5 @@
 package arp;
+
 import java.awt.Color;
 import java.awt.EventQueue;
 import javax.swing.JFrame;
@@ -17,12 +18,10 @@ import javax.swing.JComboBox;
 import javax.swing.JDialog;
 
 import java.awt.event.ActionEvent;
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.StringTokenizer;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -460,6 +459,9 @@ public class AppLayer extends JFrame implements BaseLayer{
 		contentPane.add(btnCancel);
 	}
 
+	public errorDialog getErrorDialog(String log) {
+		return new errorDialog(log);
+	}
 	public class errorDialog extends JDialog {
 
 		public errorDialog(String log) {

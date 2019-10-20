@@ -94,7 +94,7 @@ public class ARPLayer implements BaseLayer {
     }
 
     public void setAppLayer(){
-        appLayer = (AppLayer) GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0);
+        appLayer = (AppLayer) GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0);
     }
 
     @Override
@@ -160,6 +160,11 @@ public class ARPLayer implements BaseLayer {
 
             System.arraycopy(input, 8, senderMac, 0, 6);
             System.arraycopy(input, 14, senderIp, 0, 4);
+
+            if(Arrays.equals(senderIp, m_sHeader.srcIp)) {
+                AppLayer.errorDialog errorDialog = appLayer.getErrorDialog("Duplicated IP");
+                errorDialog.setVisible(true);
+            }
 
             ARPCache addCache = new ARPCache(interfaceName, senderIp, senderMac, true);
             System.arraycopy(input, 8, senderMac, 0, 6);
@@ -280,7 +285,6 @@ public class ARPLayer implements BaseLayer {
     public static class ARPCacheTable {
         public static ArrayList<ARPCache> table = new ArrayList<>();
         AppLayer appLayer;
-        static byte[] emptyMac = {0, 0, 0, 0, 0, 0};
 
         public AppLayer getAppLayer() {
             return appLayer;
@@ -307,8 +311,8 @@ public class ARPLayer implements BaseLayer {
             if(getCache == null){
                 table.add(arpCache);
             // 있지만 mac이 비어있다면 수정한다.
-            }else if(!Arrays.equals(arpCache.getMacAddress(), emptyMac)){
-                getCache.setIpAddress(arpCache.IpAddress());
+            }else if(!Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress())){
+                getCache.setIpAddress(arpCache.getMacAddress());
             }else{
                 return false;
             }

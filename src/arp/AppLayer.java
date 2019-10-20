@@ -424,8 +424,13 @@ public class AppLayer extends JFrame implements BaseLayer{
 		btnGratuitiousSend.setFocusPainted(false);
 		btnGratuitiousSend.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String macStr = gratuitiousArpTextField.getText();
-//            ethernetLayer.setMacAddr(macStr);
+				byte[] mac = parsingSrcMACAddress(gratuitiousArpTextField.getText());
+				arpLayer.setSrcMac(mac);
+				ethernetLayer.setSrcAddr(mac);
+
+				// send를 시작한다.
+				Send send = new Send();
+				send.run();
 			}
 		});
 		btnGratuitiousSend.setBackground(Color.DARK_GRAY);

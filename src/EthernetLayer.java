@@ -67,7 +67,7 @@ public class EthernetLayer implements BaseLayer {
 
     public synchronized boolean Receive(byte[] input) {
 
-        int opcode    = byte2ToInt(input[14 + 6], input[14 + 7]);
+        //  int opcode    = byte2ToInt(input[14 + 6], inddput[14 + 7]);
         int frameType = byte2ToInt(input[12]    , input[13]);
 
         if ((isRightPacket(input) == false) || isRightAddress(input) == false) {
@@ -103,18 +103,18 @@ public class EthernetLayer implements BaseLayer {
                     new byte[]{ -1, -1, -1, -1, -1, -1 },
                     new byte[]{ 0x08, 0x06 });
         }
-        else (opcode == 2) {
+        else if(opcode == 2) {
             // opcode가 2인 경우 => ARP 응답에 해당
             temp = addressing(input, input.length,
                     new byte[]{ input[ 8], input[ 9], input[10], input[11], input[12], input[13] },
-                    new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] }
+                    new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] },
                     new byte[]{ 0x08, 0x06 });
         }
         else {
             // 그 이외의 경우 프로토콜 타입을 IP로 바꿔 IP 레이어로 바로 올라가게 한다
             temp = addressing(input, input.length,
                     new byte[]{ input[ 8], input[ 9], input[10], input[11], input[12], input[13] },
-                    new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] }
+                    new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] },
                     new byte[]{ 0x08, 0x00 });
         }
 

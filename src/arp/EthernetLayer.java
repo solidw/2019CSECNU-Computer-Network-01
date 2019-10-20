@@ -1,7 +1,11 @@
+<<<<<<< Updated upstream:src/EthernetLayer.java
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+=======
+package arp;
+
+>>>>>>> Stashed changes:src/arp/EthernetLayer.java
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 public class EthernetLayer implements BaseLayer {
 
@@ -62,12 +66,22 @@ public class EthernetLayer implements BaseLayer {
 
     public EthernetLayer(String name) {
         pLayerName = name;
+<<<<<<< Updated upstream:src/EthernetLayer.java
         parsingSrcMACAddress(getMacAddr());
+=======
+    }
+
+    public void setSrcAddr(byte[] addr){
+        this.m_Ethernet_Header.setSrcAddr(addr);
+>>>>>>> Stashed changes:src/arp/EthernetLayer.java
     }
 
     public synchronized boolean Receive(byte[] input) {
 
+<<<<<<< Updated upstream:src/EthernetLayer.java
         //  int opcode    = byte2ToInt(input[14 + 6], inddput[14 + 7]);
+=======
+>>>>>>> Stashed changes:src/arp/EthernetLayer.java
         int frameType = byte2ToInt(input[12]    , input[13]);
 
         if ((isRightPacket(input) == false) || isRightAddress(input) == false) {
@@ -161,53 +175,6 @@ public class EthernetLayer implements BaseLayer {
             buf[14 + i] = input[i];
 
         return buf;
-    }
-
-    private void parsingSrcMACAddress(String addr) {
-        StringTokenizer tokens = new StringTokenizer(addr, "-");
-
-        for (int i = 0; tokens.hasMoreElements(); i++) {
-
-            String temp = tokens.nextToken();
-
-            try {
-                m_Ethernet_Header.srcAddr.addr[i] = Byte.parseByte(temp, 16);
-            } catch (NumberFormatException e) {
-                int minus = (Integer.parseInt(temp, 16)) - 256;
-                m_Ethernet_Header.srcAddr.addr[i] = (byte) (minus);
-            }
-        }
-    }
-
-    private String getMacAddr() {
-
-        try {
-            InetAddress presentAddr = InetAddress.getLocalHost();
-
-            NetworkInterface net = NetworkInterface.getByInetAddress(presentAddr);
-
-            byte[] macAddressBytes = net.getHardwareAddress();
-
-            StringBuilder macAddressStr = null;
-
-            if (macAddressBytes != null) {
-
-                macAddressStr = new StringBuilder();
-
-                for (int i = 0; i < macAddressBytes.length; i++) {
-
-                    macAddressStr.append(String.format("%02X", macAddressBytes[i]));
-                    if (i < macAddressBytes.length - 1) {
-                        macAddressStr.append("-");
-                    }
-
-                }
-            }
-            return macAddressStr.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     private boolean isRightPacket(byte[] input) {

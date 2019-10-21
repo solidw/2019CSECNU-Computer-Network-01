@@ -1,11 +1,6 @@
 package arp;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
@@ -13,22 +8,15 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-import javax.swing.JLabel;
-import javax.swing.JTable;
 
-public class AppLayer extends JFrame implements BaseLayer{
+public class AppLayer extends JFrame implements BaseLayer {
 
 	private JPanel contentPane, dialogPane, errorPane;
 	private JTextField ipAddressTextField;
@@ -196,9 +184,9 @@ public class AppLayer extends JFrame implements BaseLayer{
 		String result = "";
 		for(byte raw : bytes){
 			result += raw & 0xFF;
-			result += " ";
+			result += ".";
 		}
-		return result;
+		return result.substring(0, result.length()-1);
 	}
 
 	private byte[] parsingSrcMACAddress(String addr) {
@@ -249,8 +237,17 @@ public class AppLayer extends JFrame implements BaseLayer{
 		JButton btnItemDelete = new JButton("Delete Item");
 		btnItemDelete.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if (arpCacheTable.getSelectedRow() >= 0) {
-					arpCacheTableModel.removeRow(arpCacheTable.getSelectedRow());
+				String ip;
+				int row = arpCacheTable.getSelectedRow() ;
+				if (row >= 0) {
+					ip = (String)arpCacheTableModel.getValueAt(row, 1);
+					arpCacheTableModel.removeRow(row);
+					try {
+						byte[] bytesIp = InetAddress.getByName(ip.trim()).getAddress();
+						ARPLayer.ARPCacheTable.remove(bytesIp);
+					} catch (UnknownHostException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		});
@@ -264,9 +261,11 @@ public class AppLayer extends JFrame implements BaseLayer{
 		JButton btnAllDelete = new JButton("Delete All");
 		btnAllDelete.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				for (int i = 0; i < arpCacheTableModel.getRowCount(); i++) {
-					arpCacheTableModel.removeRow(i);
+				int count = arpCacheTableModel.getRowCount();
+				for (int i = 0; i < count; i++) {
+					arpCacheTableModel.removeRow(0);
 				}
+				ARPLayer.ARPCacheTable.removeAll();
 			}
 		});
 		btnAllDelete.setBounds(245, 230, 225, 30);
@@ -385,8 +384,17 @@ public class AppLayer extends JFrame implements BaseLayer{
 		JButton btnProxyArpDelete = new JButton("Delete");
 		btnProxyArpDelete.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (proxyArpTable.getSelectedRow() >= 0) {
+				String ip;
+				int row = proxyArpTable.getSelectedRow() ;
+				if (row >= 0) {
+					ip = (String)proxyArpTable.getValueAt(row, 1);
 					proxyArpTableModel.removeRow(proxyArpTable.getSelectedRow());
+					try {
+						byte[] bytesIp = InetAddress.getByName(ip.trim()).getAddress();
+						ARPLayer.ProxyARPEntry.remove(bytesIp);
+					} catch (Exception exception) {
+						exception.printStackTrace();
+					}
 				}
 			}
 		});

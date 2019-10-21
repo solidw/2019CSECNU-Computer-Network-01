@@ -1,9 +1,6 @@
 package arp;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 public class EthernetLayer implements BaseLayer {
 

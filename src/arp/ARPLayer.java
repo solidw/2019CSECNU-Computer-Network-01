@@ -246,6 +246,7 @@ public class ARPLayer implements BaseLayer {
             return status;
         }
 
+
         public ARPCache setStatus(boolean status) {
             this.status = status;
             return this;
@@ -290,6 +291,20 @@ public class ARPLayer implements BaseLayer {
         public AppLayer getAppLayer() {
             return appLayer;
         }
+
+
+        public static void remove(byte[] ip) {
+            for (ARPCache item : table) {
+                if(Arrays.equals(item.IpAddress(), ip))
+                    table.remove(item);
+            }
+        }
+
+        public static void removeAll() {
+            table.clear();
+        }
+
+
 
         public static ARPCache getCache(byte[] ip) {
             for (ARPCache item : table) {

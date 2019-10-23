@@ -145,9 +145,11 @@ public class ARPLayer implements BaseLayer {
             System.arraycopy(input, 14, senderIp, 0, 4);
             System.arraycopy(input, 24, dstIp, 0, 4);
 
-            ARPCache addCache = new ARPCache(interfaceName, senderIp, senderMac, true);
-            if(ARPCacheTable.add(addCache)){
-                appLayer.addArpCacheToTable(addCache);
+            if(!Arrays.equals(senderIp, m_sHeader.srcIp)) {
+                ARPCache addCache = new ARPCache(interfaceName, senderIp, senderMac, true);
+                if(ARPCacheTable.add(addCache)){
+                    appLayer.addArpCacheToTable(addCache);
+                }
             }
 
             if(Arrays.equals(dstIp, m_sHeader.srcIp)) {

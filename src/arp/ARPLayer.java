@@ -182,9 +182,9 @@ public class ARPLayer implements BaseLayer {
             System.arraycopy(input, 8, senderMac, 0, 6);
             System.arraycopy(input, 14, senderIp, 0, 4);
 
-            Objects.requireNonNull(ARPCacheTable.getCache(senderIp)).setStatus(true)
-                    .setMacAddress(senderMac);
-            appLayer.addArpCacheToTable(addCache);
+            if(ARPCacheTable.add(addCache)){
+                appLayer.addArpCacheToTable(addCache);
+            }
         }
         return true;
     }
@@ -342,13 +342,13 @@ public class ARPLayer implements BaseLayer {
             if(getCache == null){
                 table.add(arpCache);
                 if(arpCache.status == true) {
-                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 15000, () -> {
+                    TimerUtility.SetTimeout(Arrays.toString(arpCache.ipAddress), 20000, () -> {
                         remove(arpCache.ipAddress);
                         appLayer.deleteCache(arpCache.ipAddress);
                     });
                 }
                 else {
-                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 10000, () -> {
+                    TimerUtility.SetTimeout(Arrays.toString(arpCache.ipAddress), 10000, () -> {
                         remove(arpCache.ipAddress);
                         appLayer.deleteCache(arpCache.ipAddress);
                     });
@@ -358,10 +358,10 @@ public class ARPLayer implements BaseLayer {
             else if(!Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress())){
                 getCache.setIpAddress(arpCache.getMacAddress());
                 getCache.setStatus(true);
-                TimerUtility.Alter(arpCache.ipAddress.toString(), 15000);
+                TimerUtility.Alter(Arrays.toString(arpCache.ipAddress), 20000);
             }
             else if(Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress()) && getCache.status == true){
-                TimerUtility.Alter(arpCache.ipAddress.toString(), 10000);
+                TimerUtility.Alter(Arrays.toString(arpCache.ipAddress), 10000);
             }
             else {
                 return false;

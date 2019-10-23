@@ -66,7 +66,7 @@ public class TimerUtility {
 
     public static void Cancel(String eventID){
         for (Event ev : eventQue){
-            if(ev.ID == eventID){
+            if(ev.ID.equals(eventID)){
                 deleteEvent(ev);
             }
         }
@@ -74,8 +74,9 @@ public class TimerUtility {
 
     public static void Alter(String eventID, int timer){
         for (Event ev : eventQue){
-            if(ev.ID == eventID){
-                ev.elapsedTime = timer;
+            if(ev.ID.equals(eventID)){
+                ev.elapsedTime = 0;
+                ev.expirationTime = timer;
             }
         }
     }

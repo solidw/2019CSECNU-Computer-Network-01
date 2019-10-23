@@ -18,6 +18,7 @@ public class FileAppLayer implements BaseLayer {
     String fileName;
     int receiveByteLength;
     int inputCount = 0;
+    boolean isStart = false;
 
     private class _FAPP_HEADER {
         byte[] fapp_totlen;
@@ -38,6 +39,11 @@ public class FileAppLayer implements BaseLayer {
     }
 
     _FAPP_HEADER m_sHeader = new _FAPP_HEADER();
+
+
+    public void setStart(boolean start) {
+        isStart = start;
+    }
 
     public FileAppLayer(String pName) {
         // super(pName);
@@ -131,10 +137,11 @@ public class FileAppLayer implements BaseLayer {
             }
         }
         return true;
-
     }
 
-    public void firstSend(File file, int inputByteLengh) {
+
+
+    public synchronized boolean firstSend(File file, int inputByteLengh) {
         String inputFileName = file.getName();
         int sendDataLength;
         byte[] addedLengthData;
@@ -151,12 +158,22 @@ public class FileAppLayer implements BaseLayer {
         addedLengthData[sendDataLength + 3] = (byte) (inputByteLengh);
 
         this.GetUnderLayer().Send(addedLengthData, addedLengthData.length * -1);
+
         ((IPCDlg) GetUpperLayer(0)).setProgressValue(0);
 
+//        try{
+//
+//            return true;
+//        }catch (InterruptedException e){
+//            System.out.println(e.getMessage());
+//        }
+
+        return false;
     }
 
     @Override
     public synchronized boolean Send(String inputFilePath) {
+        isStart = false;
         File file = new File(inputFilePath);
         byte[] inputByte = new byte[(int) file.length()];
         byte[] sendData;
@@ -169,9 +186,16 @@ public class FileAppLayer implements BaseLayer {
 
         firstSend(file, inputByte.length);
 
+        while(!isStart){}
+
+        try{
+            Thread.sleep(10000);
+        }catch (InterruptedException e){
+            System.out.println(e.getMessage());
+        }
+
         int sendLoopCount = inputByte.length / MAX_LENGTH;
         int remainDataLength = inputByte.length % MAX_LENGTH;
-        System.out.println(sendLoopCount);
         byte newData[];
         int sequenceNumber;
         for (sequenceNumber = 0; sequenceNumber < sendLoopCount; sequenceNumber++) {
@@ -189,7 +213,6 @@ public class FileAppLayer implements BaseLayer {
 
             this.GetUnderLayer().Send(sendData, sendData.length * -1);
 
-            System.out.println(sequenceNumber);
 
             if ((inputByte.length / MAX_LENGTH) != 0) {
                 int percentage = (int) (((double) (sequenceNumber + 1) / (inputByte.length / MAX_LENGTH)) * 100);
@@ -215,13 +238,15 @@ public class FileAppLayer implements BaseLayer {
         sendData = new byte[6];
 
         try{
-            Thread.sleep(3000);
+            Thread.sleep(5);
         }catch (Exception e){
             System.out.println(e.getMessage());
         }
 
         sendData[4] = 2;
         this.GetUnderLayer().Send(sendData, sendData.length * -1);
+
+        isStart = false;
         return true;
 
     }

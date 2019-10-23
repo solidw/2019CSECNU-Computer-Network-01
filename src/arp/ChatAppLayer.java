@@ -10,6 +10,8 @@ public class ChatAppLayer implements BaseLayer {
 	public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
 	byte byteBuffer[] = new byte[(int)Math.pow(2, 20)];
 	int bufferInputCount = 0;
+	boolean isStart = false;
+
 	private class _CAPP_HEADER {
 		byte capp_type;
 		byte capp_unused;
@@ -25,6 +27,10 @@ public class ChatAppLayer implements BaseLayer {
 	}
 
 	_CAPP_HEADER m_sHeader = new _CAPP_HEADER();
+
+	public void setStart(boolean start) {
+		isStart = start;
+	}
 
 	public ChatAppLayer(String pName) {
 		// super(pName);
@@ -63,6 +69,9 @@ public class ChatAppLayer implements BaseLayer {
 	}
 
 	public synchronized boolean Send(byte[] input, int length) {
+
+		isStart = false;
+
 		// 데이터를 추가하여 가공한다.
 		int sendLoopCount = input.length / MAX_LENGTH;
 		int remainDataLength = input.length % MAX_LENGTH;
@@ -75,6 +84,8 @@ public class ChatAppLayer implements BaseLayer {
 			}
 			byte[] sendData = ObjToByte(m_sHeader, newData, newData.length);
 			sendData[2] = (byte)(i+1);
+			this.GetUnderLayer().Send(sendData, 0);
+			while(!isStart){}
 			this.GetUnderLayer().Send(sendData, sendData.length);
 		}
 
@@ -89,9 +100,17 @@ public class ChatAppLayer implements BaseLayer {
 			}else{
 				sendData[2] = 0;
 			}
+			this.GetUnderLayer().Send(sendData, 0);
+			while(!isStart){}
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			this.GetUnderLayer().Send(sendData, sendData.length);
 		}
 
+		isStart = false;
 		return true;
 	}
 

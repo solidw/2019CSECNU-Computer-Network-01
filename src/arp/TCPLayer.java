@@ -8,6 +8,7 @@ public class TCPLayer implements BaseLayer {
     public String pLayerName = null;
     public BaseLayer p_UnderLayer = null;
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
+    public IPLayer ipLayer;
     final static int CHAT_MAX_LENGTH = 1456;
     final static int FAPP_MAX_LENGTH = 1448;
 
@@ -46,6 +47,9 @@ public class TCPLayer implements BaseLayer {
 
     }
 
+    public void setIpLayer(IPLayer ipLayer) {
+        this.ipLayer = ipLayer;
+    }
 
     void copyHeader(byte[] buffer){
         int beforeHeaderSize = 0;
@@ -104,16 +108,20 @@ public class TCPLayer implements BaseLayer {
         return buf;
     }
 
-
+    public boolean ARPSend(byte[] input, int length){
+        byte[] buffer = ObjToByte(input, input.length);
+        return ipLayer.ARPSend(buffer, 0);
+    }
 
     @Override
     public synchronized boolean Send(byte[] input, int length) {
         byte[] buffer = ObjToByte(input, input.length);
 
         if(length == 0){
-            return this.GetUnderLayer().Send(buffer, 0);
+            return this.GetUnderLayer().Send(buffer, buffer.length);
         }
-        else if(length < 0){
+
+        if(length < 0){
             buffer[0] = (byte) (FAPP_MAX_LENGTH >> 8);
             buffer[1] = (byte) (FAPP_MAX_LENGTH);
 

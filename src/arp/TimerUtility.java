@@ -36,7 +36,7 @@ public class TimerUtility {
                 int loopInx = 0;
                 int loopCnt = eventQue.size();
 
-                while(!eventQue.isEmpty() && loopInx++ < loopCnt){
+                while(loopInx++ < loopCnt){
                     Event ev = eventQue.poll();
 
                     if(ev.elapsedTime >= ev.expirationTime){
@@ -66,7 +66,7 @@ public class TimerUtility {
 
     public static void Cancel(String eventID){
         for (Event ev : eventQue){
-            if(ev.ID.equals(eventID)){
+            if(ev.ID == eventID){
                 deleteEvent(ev);
             }
         }
@@ -74,9 +74,8 @@ public class TimerUtility {
 
     public static void Alter(String eventID, int timer){
         for (Event ev : eventQue){
-            if(ev.ID.equals(eventID)){
-                ev.elapsedTime = 0;
-                ev.expirationTime = timer;
+            if(ev.ID == eventID){
+                ev.elapsedTime = timer;
             }
         }
     }

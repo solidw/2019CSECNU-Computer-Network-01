@@ -57,20 +57,6 @@ public class AppLayer extends JFrame implements BaseLayer {
 
 	private static LayerManager m_LayerMgr = new LayerManager();
 
-
-	// create send using thread
-	public class Send extends Thread{
-		byte input[] = {0};
-
-		public void setInput(byte[] input) {
-			this.input = input;
-		}
-
-		public void run(){
-			tcpLayer.Send(input, 0);
-		}
-	}
-
 	public void deleteCache(byte[] ip){
 		int rowCount = arpCacheTableModel.getRowCount();
 
@@ -84,6 +70,22 @@ public class AppLayer extends JFrame implements BaseLayer {
 			}
 		}
 	}
+
+
+	// create send using thread
+	public class Send extends Thread{
+		byte input[] = {0};
+
+		public void setInput(byte[] input) {
+			this.input = input;
+		}
+
+		public void run(){
+			tcpLayer.ARPSend(input, 0);
+		}
+	}
+
+
 	// 테이블에 arp를 추가한다.
 	private void addArpToTable(ARPLayer.ARPCache arpCache){
 		String ipAddress = ipByteToString(arpCache.getIpAddress());
@@ -280,7 +282,7 @@ public class AppLayer extends JFrame implements BaseLayer {
 
 					// send를 시작한다.
 					Send send = new Send();
-					send.run();
+					send.start();
 
 				} catch (Exception e1) {
 					e1.printStackTrace();
@@ -578,6 +580,8 @@ public class AppLayer extends JFrame implements BaseLayer {
 			dialogPane.add(btnCancel);
 		}
 	}
+
+
 
 
 	@Override

@@ -8,6 +8,7 @@ public class IPLayer implements BaseLayer {
     public int nUpperLayerCount = 0;
     public String pLayerName = null;
     public BaseLayer p_UnderLayer = null;
+    public ARPLayer arpLayer;
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
 
     _IP_HEADER m_iHeader = new _IP_HEADER();
@@ -42,6 +43,10 @@ public class IPLayer implements BaseLayer {
             srcIP = new byte[4];
             destIP = new byte[4];
         }
+    }
+
+    public void setArpLayer(ARPLayer arpLayer) {
+        this.arpLayer = arpLayer;
     }
 
     public void setSrcIP(byte[] srcIP) {
@@ -129,16 +134,16 @@ public class IPLayer implements BaseLayer {
         return buf;
     }
 
+    public boolean ARPSend(byte[] input, int length) {
+        byte[] buffer = ObjToByte(input, input.length);
+        return arpLayer.Send(buffer, buffer.length);
+    }
 
     @Override
     public synchronized boolean Send(byte[] input, int length) {
         byte[] buffer = ObjToByte(input, input.length);
+        return ethernetLayer.Send(buffer, buffer.length);
 
-        if(length == 0){
-            return this.GetUnderLayer().Send(buffer, buffer.length);
-        }else{
-            return ethernetLayer.Send(buffer, buffer.length);
-        }
     }
 
     @Override

@@ -342,13 +342,13 @@ public class ARPLayer implements BaseLayer {
             if(getCache == null){
                 table.add(arpCache);
                 if(arpCache.status == true) {
-                    TimerUtility.SetTimeout(Arrays.toString(arpCache.ipAddress), 20000, () -> {
+                    TimerUtility.SetTimeout(Arrays.toString(arpCache.ipAddress), 200000, () -> {
                         remove(arpCache.ipAddress);
                         appLayer.deleteCache(arpCache.ipAddress);
                     });
                 }
                 else {
-                    TimerUtility.SetTimeout(Arrays.toString(arpCache.ipAddress), 10000, () -> {
+                    TimerUtility.SetTimeout(Arrays.toString(arpCache.ipAddress), 100000, () -> {
                         remove(arpCache.ipAddress);
                         appLayer.deleteCache(arpCache.ipAddress);
                     });
@@ -356,12 +356,12 @@ public class ARPLayer implements BaseLayer {
             // 있지만 mac이 비어있다면 수정한다.
             }
             else if(!Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress())){
-                getCache.setIpAddress(arpCache.getMacAddress());
+                getCache.setMacAddress(arpCache.getMacAddress());
                 getCache.setStatus(true);
-                TimerUtility.Alter(Arrays.toString(arpCache.ipAddress), 20000);
+                TimerUtility.Alter(Arrays.toString(arpCache.ipAddress), 200000);
             }
             else if(Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress()) && getCache.status == true){
-                TimerUtility.Alter(Arrays.toString(arpCache.ipAddress), 10000);
+                TimerUtility.Alter(Arrays.toString(arpCache.ipAddress), 100000);
             }
             else {
                 return false;

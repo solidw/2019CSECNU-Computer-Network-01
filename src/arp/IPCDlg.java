@@ -104,11 +104,18 @@ public class IPCDlg extends JFrame implements BaseLayer {
             // arp레이어에 app레이어 설정
             arpLayer.setAppLayer(app);
 
+            tcpLayer.setIpLayer(ipLayer);
+            ipLayer.setArpLayer(arpLayer);
+            ethernetLayer.setArpLayer(arpLayer);
+            ethernetLayer.setFileAppLayer(fileAppLayer);
+            ethernetLayer.setChatAppLayer(chatAppLayer);
+
             app.setTcpLayer(tcpLayer);
             app.setIpLayer(ipLayer);
             app.setArpLayer(arpLayer);
             app.setEthernetLayer(ethernetLayer);
             app.setNiLayer(niLayer);
+
 
             ipLayer.setSrcIP(InetAddress.getLocalHost().getAddress());
             arpLayer.setSrcIp(InetAddress.getLocalHost().getAddress());
@@ -121,6 +128,8 @@ public class IPCDlg extends JFrame implements BaseLayer {
             ethernetLayer.setSrcAddr(niLayer.getMacAddress());
 
             ethernetLayer.SetUpperLayer(ipLayer);
+
+
 
             // 어떤 어댑터를 사용할지 결정한다.
             // 디버깅을 통해 adapter list 를 이용하여 설정한다.
@@ -445,6 +454,7 @@ public class IPCDlg extends JFrame implements BaseLayer {
                 String dstIp = dstAddrTF.getText();
                 try {
                     ipLayer.setDestIP(InetAddress.getByName(dstIp.trim()).getAddress());
+                    arpLayer.setDstIp(InetAddress.getByName(dstIp.trim()).getAddress());
                 } catch (UnknownHostException e1) {
                     e1.printStackTrace();
                 }

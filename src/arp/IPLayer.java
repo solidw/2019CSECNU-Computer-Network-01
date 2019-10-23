@@ -1,6 +1,7 @@
 package arp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class IPLayer implements BaseLayer {
 
@@ -11,6 +12,7 @@ public class IPLayer implements BaseLayer {
 
     _IP_HEADER m_iHeader = new _IP_HEADER();
     int HeaderSize = 20;
+    EthernetLayer ethernetLayer;
 
     private class _IP_HEADER {
         byte versionAndHLength;
@@ -50,6 +52,9 @@ public class IPLayer implements BaseLayer {
         this.m_iHeader.setDestIP(destIP);
     }
 
+    public void setEthernetLayer(EthernetLayer ethernetLayer) {
+        this.ethernetLayer = ethernetLayer;
+    }
 
 
     public IPLayer(String pName){
@@ -127,14 +132,23 @@ public class IPLayer implements BaseLayer {
 
     @Override
     public synchronized boolean Send(byte[] input, int length) {
-
         byte[] buffer = ObjToByte(input, input.length);
-        return this.GetUnderLayer().Send(buffer, buffer.length);
+
+        if(length == 0){
+            return this.GetUnderLayer().Send(buffer, buffer.length);
+        }else{
+            return ethernetLayer.Send(buffer, buffer.length);
+        }
     }
 
     @Override
     public synchronized boolean Receive(byte[] input) {
-        this.GetUpperLayer(0).Receive(removeHeader(input));
+        int startOfDestIp = 16;
+        byte[] targetIp = new byte[]{
+                input[startOfDestIp], input[startOfDestIp+ 1], input[startOfDestIp + 2], input[startOfDestIp + 3]};
+        if(Arrays.equals(targetIp, this.m_iHeader.srcIP)){
+            return this.GetUpperLayer(0).Receive(removeHeader(input));
+        }
         return false;
     }
 

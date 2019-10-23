@@ -116,6 +116,14 @@ public class EthernetLayer implements BaseLayer {
                     new byte[]{ 0x08, 0x06 });
         }
         else {
+
+            byte destIP[] = new byte[]{ input[16], input[17], input[18], input[19]};
+            ARPLayer.ARPCache getCache = ARPLayer.ARPCacheTable.getCache(destIP);
+            if(getCache == null){
+                return false;
+            }
+
+
             // 그 이외의 경우 프로토콜 타입을 IP로 바꿔 IP 레이어로 바로 올라가게 한다
             temp = addressing(input, input.length,
                     new byte[]{ input[ 8], input[ 9], input[10], input[11], input[12], input[13] },

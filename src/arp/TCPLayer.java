@@ -8,6 +8,8 @@ public class TCPLayer implements BaseLayer {
     public String pLayerName = null;
     public BaseLayer p_UnderLayer = null;
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
+    final static int CHAT_MAX_LENGTH = 1456;
+    final static int FAPP_MAX_LENGTH = 1448;
 
     _TCP_HEADER m_tHeader = new _TCP_HEADER();
     int HeaderSize = 20;
@@ -85,6 +87,10 @@ public class TCPLayer implements BaseLayer {
         return buffer;
     }
 
+    public int getType(byte[] buffer) {
+        return ((((int) buffer[0] & 0xff) << 8) |
+                (((int) buffer[1] & 0xff) << 0));
+    }
 
     public byte[] removeHeader(byte[] input) {
         int inputLength = input.length;
@@ -99,17 +105,41 @@ public class TCPLayer implements BaseLayer {
     }
 
 
+
     @Override
     public synchronized boolean Send(byte[] input, int length) {
-
         byte[] buffer = ObjToByte(input, input.length);
-        boolean result = this.GetUnderLayer().Send(buffer, buffer.length);
-        return result;
+
+        if(length == 0){
+            return this.GetUnderLayer().Send(buffer, 0);
+        }
+        else if(length < 0){
+            buffer[0] = (byte) (FAPP_MAX_LENGTH >> 8);
+            buffer[1] = (byte) (FAPP_MAX_LENGTH);
+
+            try{
+                Thread.sleep(5);
+            }catch (Exception e){
+                System.out.println(e.getMessage());
+            }
+
+            return this.GetUnderLayer().Send(buffer, buffer.length);
+        }else{
+            buffer[0] = (byte) (CHAT_MAX_LENGTH >> 8);
+            buffer[1] = (byte) (CHAT_MAX_LENGTH);
+            return this.GetUnderLayer().Send(buffer, buffer.length);
+        }
     }
 
     @Override
     public synchronized boolean Receive(byte[] input) {
-        this.GetUpperLayer(0).Receive(removeHeader(input));
+        int type = getType(input);
+
+        if(type == CHAT_MAX_LENGTH){
+            this.GetUpperLayer(0).Receive(removeHeader(input));
+        }else{
+            this.GetUpperLayer(1).Receive(removeHeader(input));
+        }
         return false;
     }
 

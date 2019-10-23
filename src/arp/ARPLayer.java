@@ -101,8 +101,8 @@ public class ARPLayer implements BaseLayer {
         return buf;
     }
 
-    public void setAppLayer(){
-        appLayer = (AppLayer) GetUnderLayer().GetUpperLayer(0).GetUpperLayer(0).GetUpperLayer(0);
+    public void setAppLayer(AppLayer app){
+        appLayer = app;
     }
 
     @Override

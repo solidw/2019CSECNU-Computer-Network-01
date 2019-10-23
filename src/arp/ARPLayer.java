@@ -148,7 +148,7 @@ public class ARPLayer implements BaseLayer {
             ARPCache addCache = new ARPCache(interfaceName, senderIp, senderMac, true);
             if(ARPCacheTable.add(addCache)){
                 appLayer.addArpCacheToTable(addCache);
-            };
+            }
 
             if(Arrays.equals(dstIp, m_sHeader.srcIp)) {
                 byte[] data = swapSrcAndDst(input, senderIp, senderMac, dstIp, m_sHeader.srcMac);

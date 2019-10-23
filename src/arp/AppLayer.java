@@ -216,6 +216,20 @@ public class AppLayer extends JFrame implements BaseLayer {
 		return ret;
 	}
 
+	public void deleteCache(byte[] ip){
+		int rowCount = arpCacheTableModel.getRowCount();
+
+		String inputIp = ipByteToString(ip);
+		String storedIp;
+		for (int row = 0; row < rowCount; row++) {
+			storedIp = (String)arpCacheTableModel.getValueAt(row, 1);
+			if(storedIp.equals(inputIp)){
+				arpCacheTableModel.removeRow(row);
+				return;
+			}
+		}
+	}
+
 	/**
 	 * Create the frame.
 	 */

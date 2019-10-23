@@ -433,6 +433,7 @@ public class AppLayer extends JFrame implements BaseLayer {
 		btnGratuitiousSend.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				byte[] mac = parsingSrcMACAddress(gratuitiousArpTextField.getText());
+				arpLayer.setDstIp(arpLayer.getSrcIp());
 				arpLayer.setSrcMac(mac);
 				ethernetLayer.setSrcAddr(mac);
 

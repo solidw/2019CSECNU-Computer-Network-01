@@ -58,6 +58,10 @@ public class ARPLayer implements BaseLayer {
         public void setDstMac(byte[] dstMac) {
             this.dstMac = dstMac;
         }
+
+        public byte[] getSrcIp() {
+            return srcIp;
+        }
     }
 
     ARPHeader m_sHeader = new ARPHeader();
@@ -76,6 +80,10 @@ public class ARPLayer implements BaseLayer {
 
     public void setDstMac(byte[] dstMac) {
         m_sHeader.setDstMac(dstMac);
+    }
+
+    public byte[] getSrcIp() {
+        return m_sHeader.getSrcIp();
     }
 
     private byte[] ObjToByte(ARPHeader Header, byte[] input, int length) {

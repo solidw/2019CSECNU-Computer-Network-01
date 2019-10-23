@@ -36,7 +36,7 @@ public class TimerUtility {
                 int loopInx = 0;
                 int loopCnt = eventQue.size();
 
-                while(loopInx++ < loopCnt){
+                while(!eventQue.isEmpty() && loopInx++ < loopCnt){
                     Event ev = eventQue.poll();
 
                     if(ev.elapsedTime >= ev.expirationTime){

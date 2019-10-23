@@ -11,7 +11,7 @@ public class ARPLayer implements BaseLayer {
     public BaseLayer p_UnderLayer = null;
     public ArrayList<BaseLayer> p_aUpperLayer = new ArrayList<BaseLayer>();
     String interfaceName;
-    AppLayer appLayer;
+    static AppLayer appLayer;
 
 
     public ARPLayer(String name) {
@@ -294,7 +294,7 @@ public class ARPLayer implements BaseLayer {
 
     public static class ARPCacheTable {
         public static ArrayList<ARPCache> table = new ArrayList<>();
-        AppLayer appLayer;
+        static AppLayer appLayer;
 
         public AppLayer getAppLayer() {
             return appLayer;
@@ -335,27 +335,30 @@ public class ARPLayer implements BaseLayer {
             if(getCache == null){
                 table.add(arpCache);
                 if(arpCache.status == true) {
-                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 3000, () -> remove(arpCache.ipAddress));
+                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 3000, () -> {
+                        remove(arpCache.ipAddress);
+                        appLayer.deleteCache(arpCache.ipAddress);
+                    });
                 }
                 else {
-                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 10000, () -> remove(arpCache.ipAddress));
+                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 10000, () -> {
+                        remove(arpCache.ipAddress);
+                        appLayer.deleteCache(arpCache.ipAddress);
+                    });
                 }
             // 있지만 mac이 비어있다면 수정한다.
             }
             else if(!Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress())){
                 getCache.setIpAddress(arpCache.getMacAddress());
                 getCache.setStatus(true);
-                TimerUtility.Alter(arpCache.ipAddress.toString() , 3000);
-//                TimerUtility.Alter(arpCache.ipAddress.toString(), 20 * 60 * 1000);
+                TimerUtility.Alter(arpCache.ipAddress.toString(), 3000);
             }
             else if(Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress()) && getCache.status == true){
-                TimerUtility.Alter(arpCache.ipAddress.toString() , 10000);
+                TimerUtility.Alter(arpCache.ipAddress.toString(), 10000);
             }
             else {
                 return false;
             }
-
-//            TimerUtility.SetTimeout(arpCache.ipAddress.toString() ,20 * 60 * 1000, () -> remove(arpCache.ipAddress));
 
             return true;
         }

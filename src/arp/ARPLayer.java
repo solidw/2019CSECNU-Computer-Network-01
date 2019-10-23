@@ -2,6 +2,7 @@ package arp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Objects;
 
 public class ARPLayer implements BaseLayer {
@@ -296,7 +297,6 @@ public class ARPLayer implements BaseLayer {
 
     public static class ARPCacheTable {
         public static ArrayList<ARPCache> table = new ArrayList<>();
-        static AppLayer appLayer;
 
         public AppLayer getAppLayer() {
             return appLayer;
@@ -304,9 +304,14 @@ public class ARPLayer implements BaseLayer {
 
 
         public static void remove(byte[] ip) {
-            for (ARPCache item : table) {
-                if(Arrays.equals(item.IpAddress(), ip))
-                    table.remove(item);
+
+            Iterator<ARPCache> iter = table.iterator();
+
+            while(iter.hasNext()) {
+                ARPCache cache = iter.next();
+                if(Arrays.equals(cache.IpAddress(), ip)){
+                    iter.remove();
+                }
             }
         }
 
@@ -337,7 +342,7 @@ public class ARPLayer implements BaseLayer {
             if(getCache == null){
                 table.add(arpCache);
                 if(arpCache.status == true) {
-                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 3000, () -> {
+                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 15000, () -> {
                         remove(arpCache.ipAddress);
                         appLayer.deleteCache(arpCache.ipAddress);
                     });
@@ -353,7 +358,7 @@ public class ARPLayer implements BaseLayer {
             else if(!Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress())){
                 getCache.setIpAddress(arpCache.getMacAddress());
                 getCache.setStatus(true);
-                TimerUtility.Alter(arpCache.ipAddress.toString(), 3000);
+                TimerUtility.Alter(arpCache.ipAddress.toString(), 15000);
             }
             else if(Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress()) && getCache.status == true){
                 TimerUtility.Alter(arpCache.ipAddress.toString(), 10000);

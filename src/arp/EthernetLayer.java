@@ -1,9 +1,6 @@
 package arp;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
 
 public class EthernetLayer implements BaseLayer {
 
@@ -85,13 +82,13 @@ public class EthernetLayer implements BaseLayer {
         if (frameType == 0x0806){
             input = removeAddressHeader(input, input.length);
             // ARP Layer로 전송
-            GetUpperLayer(0).Receive(input);
+            GetUpperLayer(1).Receive(input);
             return true;
         }
         else if (frameType == 0x0800){
             input = removeAddressHeader(input, input.length);
             // IP 프로토콜의 프레임의 경우 IP Layer로 전송
-            GetUpperLayer(1).Receive(input);
+            GetUpperLayer(0).Receive(input);
             return true;
         }
 

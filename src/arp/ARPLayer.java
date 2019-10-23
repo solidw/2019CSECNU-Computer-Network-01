@@ -306,12 +306,34 @@ public class ARPLayer implements BaseLayer {
             // 테이블에 없다면 바로 추가한다.
             if(getCache == null){
                 table.add(arpCache);
+                if(arpCache.status == true) {
+                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 3000, () -> remove(arpCache.ipAddress));
+                }
+                else {
+                    TimerUtility.SetTimeout(arpCache.ipAddress.toString(), 10000, () -> remove(arpCache.ipAddress));
+                }
             // 있지만 mac이 비어있다면 수정한다.
+<<<<<<< Updated upstream
             }else if(!Arrays.equals(arpCache.getMacAddress(), emptyMac)){
                 getCache.setIpAddress(arpCache.IpAddress());
             }else{
+=======
+            }
+            else if(!Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress())){
+                getCache.setIpAddress(arpCache.getMacAddress());
+                getCache.setStatus(true);
+                TimerUtility.Alter(arpCache.ipAddress.toString() , 3000);
+//                TimerUtility.Alter(arpCache.ipAddress.toString(), 20 * 60 * 1000);
+            }
+            else if(Arrays.equals(arpCache.getMacAddress(), getCache.MacAddress()) && getCache.status == true){
+                TimerUtility.Alter(arpCache.ipAddress.toString() , 10000);
+            }
+            else {
+>>>>>>> Stashed changes
                 return false;
             }
+
+//            TimerUtility.SetTimeout(arpCache.ipAddress.toString() ,20 * 60 * 1000, () -> remove(arpCache.ipAddress));
 
             return true;
         }

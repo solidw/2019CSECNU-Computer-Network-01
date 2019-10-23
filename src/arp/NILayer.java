@@ -6,6 +6,9 @@ import org.jnetpcap.packet.PcapPacket;
 import org.jnetpcap.packet.PcapPacketHandler;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +42,6 @@ public class NILayer implements BaseLayer {
             System.err.printf("Can't read list of devices, error is %s", errbuf.toString());
             return;
         }
-
     }
 
     public void SetAdapterNumber(int iNum) {
@@ -48,10 +50,10 @@ public class NILayer implements BaseLayer {
         Receive();
     }
 
-    public byte[] getMacAddress(){
+    public byte[] getMacAddress(int index){
         byte[] result = null;
         try {
-            result = m_pAdapterList.get(0).getHardwareAddress();
+            result = m_pAdapterList.get(index).getHardwareAddress();
         } catch (IOException e) {
             e.printStackTrace();
         }

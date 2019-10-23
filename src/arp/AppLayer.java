@@ -22,7 +22,11 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+<<<<<<< Updated upstream
 import java.util.List;
+=======
+import java.util.Arrays;
+>>>>>>> Stashed changes
 import java.util.StringTokenizer;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
@@ -100,23 +104,27 @@ public class AppLayer extends JFrame implements BaseLayer{
 					m_LayerMgr.GetLayer("Ip").SetUnderLayer(m_LayerMgr.GetLayer("Arp"));
                				m_LayerMgr.GetLayer("Ethernet").SetUpperUnderLayer(m_LayerMgr.GetLayer("Arp"));
 					
-					arpLayer.setAppLayer();
 					ipLayer.setSrcIP(InetAddress.getLocalHost().getAddress());
 					arpLayer.setSrcIp(InetAddress.getLocalHost().getAddress());
 
 					InetAddress presentAddr = InetAddress.getLocalHost();
 					NetworkInterface net = NetworkInterface.getByInetAddress(presentAddr);
 
+					int adapterIndex = -1;
+
+					for (int i = 0; i < niLayer.m_pAdapterList.size(); i++){
+						if(Arrays.equals(niLayer.m_pAdapterList.get(i).getHardwareAddress(), net.getHardwareAddress())){
+							adapterIndex = i;
+						}
+					}
+
 					byte[] macAddressBytes = net.getHardwareAddress();
-					arpLayer.setSrcMac(niLayer.getMacAddress());
-					ethernetLayer.setSrcAddr(niLayer.getMacAddress());
-
-
+					arpLayer.setSrcMac(niLayer.getMacAddress(adapterIndex));
+					ethernetLayer.setSrcAddr(niLayer.getMacAddress(adapterIndex));
 					ethernetLayer.SetUpperLayer(ipLayer);
 
 					// 어떤 어댑터를 사용할지 결정한다.
 					// 디버깅을 통해 adapter list 를 이용하여 설정한다.
-					niLayer.SetAdapterNumber(0);
 
 				} catch (Exception e) {
 					e.printStackTrace();

@@ -146,18 +146,19 @@ public class EthernetLayer implements BaseLayer {
             // 그 이외의 경우 프로토콜 타입을 IP로 바꿔 IP 레이어로 바로 올라가게 한다
             byte destIP[] = new byte[]{ input[16], input[17], input[18], input[19]};
             ARPLayer.ARPCache getCache = ARPLayer.ARPCacheTable.getCache(destIP);
+            ARPLayer.Proxy getProxyCache = ARPLayer.ProxyARPEntry.get(destIP);
             boolean isArpRequest = false;
             byte[] emptyMac = new byte[6];
 
-            if(getCache == null){
+            if(getCache == null && getProxyCache == null){
                 arpLayer.Send(new byte[10], 10);
                 getCache = ARPLayer.ARPCacheTable.getCache(destIP);
             }
 
-            while(Arrays.equals(getCache.getMacAddress(), emptyMac)){
+            while(getProxyCache == null &&Arrays.equals(getCache.getMacAddress(), emptyMac)){
 
                 getCache = ARPLayer.ARPCacheTable.getCache(destIP);
-
+                getProxyCache = ARPLayer.ProxyARPEntry.get(destIP);
                 try{
                     Thread.sleep(1000);
                 }catch (Exception e){
@@ -169,9 +170,10 @@ public class EthernetLayer implements BaseLayer {
             chatAppLayer.setStart(true);
 
             getCache = ARPLayer.ARPCacheTable.getCache(destIP);
+            byte[] destMac = getCache != null ? getCache.getMacAddress() : getProxyCache.MacAddress();
             temp = addressing(input, input.length,
                     new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] },
-                    getCache.getMacAddress(),
+                    destMac,
                     new byte[]{ 0x08, 0x00 });
         }
 

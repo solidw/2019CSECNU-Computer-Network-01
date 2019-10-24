@@ -102,9 +102,9 @@ public class EthernetLayer implements BaseLayer {
 
         int frameType = byte2ToInt(input[12], input[13]);
 
-//        if ((isRightPacket(input) == false) || isRightAddress(input) == false) {
-//            return false;
-//        }
+        if ((isRightPacket(input) == false) || isRightAddress(input) == false) {
+            return false;
+        }
 
         if (frameType == 0x0806){
             input = removeAddressHeader(input, input.length);
@@ -223,11 +223,9 @@ public class EthernetLayer implements BaseLayer {
     }
 
     private boolean isRightPacket(byte[] input) {
-        int  protType  = byte2ToInt(input[14 + 2], input[14 + 3]);
-        byte HWType    = input[14 + 1];
         int  frameType = byte2ToInt(input[12]    , input[13]);
 
-        if (protType != 0x0800 ||  HWType != 0x0001 || (frameType != 0x0800 && frameType != 0x0806)) {
+        if (frameType != 0x0800 && frameType != 0x0806) {
             return false;
         }
         return true;

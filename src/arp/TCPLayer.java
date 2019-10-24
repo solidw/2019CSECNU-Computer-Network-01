@@ -145,7 +145,7 @@ public class TCPLayer implements BaseLayer {
 
         if(type == CHAT_MAX_LENGTH){
             this.GetUpperLayer(0).Receive(removeHeader(input));
-        }else{
+        }else if(type == FAPP_MAX_LENGTH){
             this.GetUpperLayer(1).Receive(removeHeader(input));
         }
         return false;

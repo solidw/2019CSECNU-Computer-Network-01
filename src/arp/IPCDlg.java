@@ -459,6 +459,8 @@ public class IPCDlg extends JFrame implements BaseLayer {
                     e1.printStackTrace();
                 }
                 dstAddrTF.setEnabled(false);
+                macAddrTF.setEnabled(false);
+                ipAddrTF.setEnabled(false);
                 Setting_Button.setText("Reset");
                 fileSelectButoon.setEnabled(true);
                 transperButton.setEnabled(true);
@@ -466,6 +468,8 @@ public class IPCDlg extends JFrame implements BaseLayer {
             } else if (e.getActionCommand() == "Reset") {
                 // reset 버튼이 눌리면 수정을 허용하고 맥주소를 초기화한다.
                 dstAddrTF.setEnabled(true);
+                macAddrTF.setEnabled(true);
+                ipAddrTF.setEnabled(true);
                 ethernetLayer.setSrcAddr(resetMac);
                 dstAddrTF.setText("");
                 Setting_Button.setText("Setting");

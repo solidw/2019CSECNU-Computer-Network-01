@@ -155,15 +155,10 @@ public class EthernetLayer implements BaseLayer {
                 getCache = ARPLayer.ARPCacheTable.getCache(destIP);
             }
 
-            while(getProxyCache == null &&Arrays.equals(getCache.getMacAddress(), emptyMac)){
+            while(getProxyCache == null && !getCache.Status()){
 
                 getCache = ARPLayer.ARPCacheTable.getCache(destIP);
                 getProxyCache = ARPLayer.ProxyARPEntry.get(destIP);
-                try{
-                    Thread.sleep(1000);
-                }catch (Exception e){
-                    System.out.println(e.getMessage());
-                }
             }
 
             fileAppLayer.setStart(true);
@@ -172,7 +167,7 @@ public class EthernetLayer implements BaseLayer {
             getCache = ARPLayer.ARPCacheTable.getCache(destIP);
             byte[] destMac = getCache != null ? getCache.getMacAddress() : getProxyCache.MacAddress();
             temp = addressing(input, input.length,
-                    new byte[]{ input[18], input[19], input[20], input[21], input[22], input[23] },
+                    this.m_Ethernet_Header.srcAddr.addr,
                     destMac,
                     new byte[]{ 0x08, 0x00 });
         }

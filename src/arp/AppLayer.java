@@ -414,6 +414,7 @@ public class AppLayer extends JFrame implements BaseLayer {
 			public void actionPerformed(ActionEvent e) {
 				byte[] mac = parsingSrcMACAddress(gratuitiousArpTextField.getText());
 				arpLayer.setSrcMac(mac);
+				arpLayer.setDstIp(arpLayer.getSrcIp());
 				ethernetLayer.setSrcAddr(mac);
 				gratuitiousArpTextField.setText("");
 				// send를 시작한다.

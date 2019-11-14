@@ -113,9 +113,12 @@ public class ARPLayer implements BaseLayer {
 
 
         ARPCache addCache = new ARPCache(interfaceName, m_sHeader.dstIp, new byte[6], false);
-        if(ARPCacheTable.add(addCache)){
-            appLayer.addArpCacheToTable(addCache);
+        if(!Arrays.equals(m_sHeader.srcIp, addCache.getIpAddress())) {
+            if(ARPCacheTable.add(addCache)){
+                appLayer.addArpCacheToTable(addCache);
+            }
         }
+
 
         byte[] buf = ObjToByte(m_sHeader, input, length);
         GetUnderLayer().Send(buf, buf.length);
